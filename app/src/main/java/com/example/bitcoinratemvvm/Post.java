@@ -2,8 +2,7 @@ package com.example.bitcoinratemvvm;
 
 import com.google.gson.annotations.SerializedName;
 
-
-public class Post{
+public class Post {
 
     private String asset_id_base;
 
@@ -15,14 +14,11 @@ public class Post{
 
     private String error;
 
-    public Post(String asset_id_base, String name, double price,String error) {
+    public Post(String asset_id_base, String name, double price, String error) {
         this.asset_id_base = asset_id_base;
         this.name = name;
         this.price = price;
         this.error = error;
-    }
-
-    public Post() {
     }
 
     public String getError() {

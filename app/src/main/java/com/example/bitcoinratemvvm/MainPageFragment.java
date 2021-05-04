@@ -12,11 +12,10 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import retrofit2.Call;
-import retrofit2.Callback;
 import retrofit2.Response;
 
 public class MainPageFragment extends Fragment {
@@ -28,8 +27,7 @@ public class MainPageFragment extends Fragment {
     private PostViewModel postViewModel;
     private final Handler handler = new Handler();
     private PickerListener pickerListener;
-    private Call<Post> call;
-
+    private Post modal;
 
 
     public MainPageFragment() {
@@ -56,10 +54,22 @@ public class MainPageFragment extends Fragment {
         name = view.findViewById(R.id.valute_name);
         pickers = view.findViewById(R.id.pickerId);
 
+        postViewModel = new ViewModelProvider(this, new PostViewModelFactory(getActivity().getApplication())).get(PostViewModel.class);
 
-        PostRepository repository = new PostRepository();
-        postViewModel = new ViewModelProvider(this,new PostViewModelFactory(getActivity().getApplication())).get(PostViewModel.class);
+        postViewModel.getCall("USD");
 
+        postViewModel.myResponse.observe(this, new Observer<Response<Post>>() {
+            @Override
+            public void onChanged(Response<Post> postResponse) {
+                if (postResponse.isSuccessful()) {
+                    modal = postResponse.body();
+                    price.setText(String.format("%.2f", modal.getPrice()));
+                    name.setText(String.valueOf(modal.getName()));
+                } else {
+                    Toast.makeText(getContext(), "Response :: " + postResponse.errorBody().toString(), Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
 
         pickers.setMinValue(0);
         pickers.setMaxValue(arrayPicker.length - 1);
@@ -70,94 +80,15 @@ public class MainPageFragment extends Fragment {
         pickers.setOnValueChangedListener(pickerListener);
         pickers.setOnScrollListener(pickerListener);
 
-
-        //https://stackoverflow.com/questions/31003668/numberpicker-getvalue-on-scroll-state-idle-might-not-be-the-last-updated-valu
-//        pickers.setOnScrollListener(new NumberPicker.OnScrollListener() {
-//            @Override
-//            public void onScrollStateChange(NumberPicker numberPicker, int i) {
-//                if (i == NumberPicker.OnScrollListener.SCROLL_STATE_IDLE) {
-//                    numberPicker.postDelayed(new Runnable() {
-//                        public void run() {
-//                            setValue2(arrayPicker[numberPicker.getValue()]);
-//                            //Toast.makeText(getContext(), "Number=" + numberPicker.getValue(), Toast.LENGTH_SHORT).show();
-//                        }
-//                    }, 500);//set time
-//                }
-//            }
-//        });
-//
-//        pickers.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-//            @Override
-//            public void onValueChange(NumberPicker numberPicker, int i, int i1) {
-//                handler.postDelayed(new Runnable() {
-//                    public void run() {
-//                        if (i1 == pickers.getValue()) {
-//                            setValue2(arrayPicker[i1]);
-//                            //Toast.makeText(getContext(), "Number=" + i1, Toast.LENGTH_SHORT).show();
-//                        }
-//                    }
-//                }, 500);//set time
-//            }
-//        });
-
-
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                setValue2(arrayPicker[pickers.getValue()]);
-                //setValue(postViewModel.getCallValute(arrayPicker[pickers.getValue()]));
+                postViewModel.getCall(arrayPicker[pickers.getValue()]);
                 swipeRefreshLayout.setRefreshing(false);
             }
         });
-
-        setValue2("USD");
     }
 
-    private void setValue2(String valute){
-        call = postViewModel.getCallValute(valute);
-
-        call.enqueue(new Callback<Post>() {
-            @Override
-            public void onResponse(Call<Post> call, Response<Post> response) {
-                if (response.isSuccessful()) {
-                    Post modal = response.body();
-
-                    price.setText(String.format("%.2f", modal.getPrice()));
-                    name.setText(String.valueOf(modal.getName()));
-                }else{
-                    Toast.makeText(getContext(), "Request Error :: " +response.errorBody().toString(), Toast.LENGTH_SHORT).show();
-                    //System.out.println("Request Error :: " + response.errorBody());
-                }
-            }
-
-            @Override
-            public void onFailure(Call<Post> call, Throwable t) {
-                Toast.makeText(getContext(), "Failed to get data..", Toast.LENGTH_SHORT).show();
-                System.out.println("Network Error :: " + t.getLocalizedMessage());
-            }
-        });
-    }
-
-    private void setValue(Call<Post> call) {
-        call.enqueue(new Callback<Post>() {
-            @Override
-            public void onResponse(Call<Post> call, Response<Post> response) {
-                if (response.isSuccessful()) {
-                    Post modal = response.body();
-
-                    price.setText(String.format("%.2f", modal.getPrice()));
-                    name.setText(String.valueOf(modal.getName()));
-                }else{
-                    Toast.makeText(getContext(), "Error: "+response.errorBody().toString(), Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<Post> call, Throwable t) {
-                Toast.makeText(getContext(), "Fail to get the data..", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
     private class PickerListener implements NumberPicker.OnScrollListener, NumberPicker.OnValueChangeListener {
         private int scrollState = 0;
 
@@ -167,8 +98,7 @@ public class MainPageFragment extends Fragment {
             if (scrollState == SCROLL_STATE_IDLE) {
                 numberPicker.postDelayed(new Runnable() {
                     public void run() {
-                        setValue2(arrayPicker[numberPicker.getValue()]);
-                        //Toast.makeText(getContext(), "Number=" + numberPicker.getValue(), Toast.LENGTH_SHORT).show();
+                        postViewModel.getCall(arrayPicker[pickers.getValue()]);
                     }
                 }, 500);//set time
             }
@@ -180,16 +110,11 @@ public class MainPageFragment extends Fragment {
                 handler.postDelayed(new Runnable() {
                     public void run() {
                         if (newVal == pickers.getValue()) {
-                            setValue2(arrayPicker[newVal]);
-                            //Toast.makeText(getContext(), "Number=" + i1, Toast.LENGTH_SHORT).show();
+                            postViewModel.getCall(arrayPicker[pickers.getValue()]);
                         }
                     }
                 }, 500);//set time
             }
         }
-    }
-
-    private void update(){
-
     }
 }

@@ -10,28 +10,8 @@ public class RetrofitInstance {
     private  static Retrofit retrofit;
     private  static RetrofitAPI retrofitAPI;
 
-    private static class LazeHolder{
-        public static final Retrofit RETROFIT_INSTANCE = new Retrofit.Builder()
-                .baseUrl(BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
-        public static final RetrofitAPI RETROFIT_API_INSTANCE =
-                getRetrofitInstance().create(RetrofitAPI.class);
-    }
-
-    public static Retrofit getRetrofitInstance(){
-        return LazeHolder.RETROFIT_INSTANCE;
-    }
-
-    public static RetrofitAPI getRetrofitApiInstance(){
-        return LazeHolder.RETROFIT_API_INSTANCE;
-    }
-
-
-
-    public static synchronized Retrofit getRetrofit(){
-        if(retrofit == null){
+    public static synchronized Retrofit getRetrofit() {
+        if (retrofit == null) {
             retrofit = new Retrofit.Builder()
                     .baseUrl(BASE_URL)
                     .addConverterFactory(GsonConverterFactory.create())
