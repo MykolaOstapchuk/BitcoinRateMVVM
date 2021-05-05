@@ -7,10 +7,11 @@ import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
 public class PostViewModelFactory implements ViewModelProvider.Factory {
-    private Application myapplication;
+
+    private Application application;
 
     public PostViewModelFactory(Application application) {
-        this.myapplication = application;
+        this.application = application;
     }
 
     @SuppressWarnings("unchecked")
@@ -18,7 +19,7 @@ public class PostViewModelFactory implements ViewModelProvider.Factory {
     @Override
     public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
         if (modelClass.isAssignableFrom(PostViewModel.class)) {
-            return (T) new PostViewModel(myapplication);
+            return (T) new PostViewModel(application);
         }
         throw new IllegalArgumentException("Unknown ViewModel class");
     }
