@@ -4,7 +4,9 @@ import android.app.Application;
 import android.widget.Toast;
 
 import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -24,11 +26,7 @@ public class PostViewModel extends AndroidViewModel {
         myCall.enqueue(new Callback<Post>() {
             @Override
             public void onResponse(Call<Post> call, Response<Post> response) {
-                if (response.isSuccessful()) {
                     myResponse.setValue(response);
-                } else {
-                    Toast.makeText(getApplication(), "Request Error :: " + response.errorBody().toString(), Toast.LENGTH_SHORT).show();
-                }
             }
 
             @Override
